@@ -1,9 +1,17 @@
 {
-  "estimator_mean_error": 0.0001227072808909436,
-  "coverage_rate": 1.0,
+  "estimator_mean_error": -6.011948806033118e-06,
+  "estimator_std_error": 0.00044051259150364825,
+  "coverage_rate_by_N": {
+    "16": 1.0,
+    "32": 1.0,
+    "64": 1.0
+  },
+  "primary_N": 32,
+  "primary_coverage_rate": 1.0,
   "nominal_target": 0.9,
-  "high_setting_R_cert": 1.0,
-  "low_setting_R_cert": 1.0,
+  "high_setting_min_empirical_R_cert": 0.6992922037875181,
+  "high_setting_min_population_R_cert": 0.06322187770610208,
+  "low_setting_min_empirical_R_cert": 1.0,
   "insufficiency": {
     "mu1_mean": 0.6000000000000001,
     "mu2_mean": 0.6,
