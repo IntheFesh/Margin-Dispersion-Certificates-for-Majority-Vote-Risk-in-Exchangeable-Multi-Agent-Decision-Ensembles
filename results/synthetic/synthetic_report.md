@@ -3,8 +3,8 @@
 - mode: synthetic
 - config_path: configs/synthetic_tests.yaml
 - seed: 42
-- datetime_utc: 2026-05-22T22:34:33.991813+00:00
-- git_commit: 32792a2f61cd838630833b2ddd3914bbb4cb1c0c
+- datetime_utc: 2026-05-22T22:59:04.427507+00:00
+- git_commit: b61706db3c76e7976b345a1107063900d8ca0e86
 - num_instances: 2000
 - num_models_or_samples: 32
 - invalid_parse_rate: 0.000000

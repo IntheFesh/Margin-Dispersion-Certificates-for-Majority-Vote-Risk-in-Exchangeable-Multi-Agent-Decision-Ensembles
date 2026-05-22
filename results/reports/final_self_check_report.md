@@ -1,8 +1,59 @@
 # Final Self-Check Report
 
-- datetime_utc: 2026-05-22T22:34Z
+- datetime_utc: 2026-05-22T22:34Z (initial); refreshed after theory-alignment audit
 - git_commit: 32792a2f61cd838630833b2ddd3914bbb4cb1c0c
 - branch: claude/exciting-turing-jKd0t
+- PR: https://github.com/IntheFesh/Margin-Dispersion-Certificates-for-Majority-Vote-Risk-in-Exchangeable-Multi-Agent-Decision-Ensembles/pull/5
+
+## 0. Theory-vs-Code Alignment Audit (paper R3)
+
+Direct line-by-line check against `50b2e12e-v4_compact_r1_revised_multi_agent_R3_checked.md`:
+
+| Proposal section | Object | Code | Status |
+|---|---|---|---|
+| §2.1 | Bernoulli mixture, $\bar\alpha=E_\mu[\alpha]$, $\mathcal F=\mathrm{Var}_\mu[\alpha]$ | `theory/estimators.py` | matches |
+| §2.3 | strict majority, ties as failures, $r_N(a)=P(\mathrm{Bin}(N,a)\le\lfloor N/2\rfloor)$ | `theory/majority_risk.binom_strict_failure_prob` | matches |
+| §2.3 | $R_N(\mu)=\int r_N(\alpha)d\mu(\alpha)$ | `mixture_majority_risk` | matches (averages conditional binomials) |
+| §2.4 | $Z_m, U^{(2)}_m, \widehat{\mathcal F}$ | `estimators.{compute_z,compute_u2_per_instance,estimate_F_unbiased}` | matches; $K\ge 2, M\ge 2$ enforced |
+| §3.1 Thm 1 | $\mathcal F/(\mathcal F+(m-\eta)^2)+e^{-2N\eta^2}$ over $\eta\in(0,m)$ | `certificate.certificate_objective` + `population_certificate` | matches; $\eta$ optimised numerically |
+| §3.2 Prop 1 | $\mu_1,\mu_2$ with same mean/var, $R_3(\mu_1)=0.376, R_3(\mu_2)=0.340$ | `theory/insufficiency.reproduce_two_moment_insufficiency` + `test_insufficiency.py` | exact to 1e-8 |
+| §3.3 Thm 2 | $\epsilon_\delta=\sqrt{\log(4/\delta)/(2M)}$, $L_\alpha$, $U_2$, $U_F=\min(1/4,\max(0,U_2-L_\alpha^2))$, $m_L=L_\alpha-1/2$ | `compute_confidence_bounds` | matches |
+| §3.3 | refuse if $m_L\le 0$, else minimise over $\eta\in(0,m_L)$ | `empirical_certificate_from_summaries` | matches |
+| §3.3 | $K$ vs $N$ distinction | `K_est_values` and `N_values` in configs | matches |
+| §3.3 | $\delta_\text{cell}=\delta_\text{global}/C$ across cells | **FIXED in this pass** -- `run_pilot.py` and `run_full.py` now compute $C$ and use `delta_cell` | now matches |
+| §3.3 | same $(L_\alpha,U_F)$ for all $N$ within a cell | `empirical_certificate_from_X` recomputes from $X_\mathrm{est}$ per $N$ but $X_\mathrm{est}$ is fixed within a cell, so $(L_\alpha,U_F)$ is invariant in $N$ | matches |
+| §3.4 Corollary 1 | operating regime $m\uparrow, \mathcal F\downarrow, N\uparrow$ | `run_full.py` stratified table high-m/low-F/large-N vs low-m/high-F/small-N | matches |
+| §3.5 design space | $R^\mathrm{cert}_N$ as function of $(m, \mathcal F)$ with contours and overlay | `figures/design_space.py` | matches; labels are "certified low-risk / intermediate / uninformative" |
+| §4.1 | M=100, K_ref=64, K_est=32, ARC+GSM8K, A1+A2, N∈{16,32,64} | `configs/panel_a_pilot.yaml` | matches |
+| §4.2 | A1 prompt-randomized, A2 randomized model-family ensemble | `panel_a/protocols.py` | matches; no temperature mixing inside an ensemble cell |
+| §4.3 | $K_\text{ref}\ge 4 K_\text{est}$, disjoint estimation/reference split | `split_estimation_reference` with explicit leakage check | matches |
+| §4.4 | M=500, K_ref=256, K_est∈{16,32,64}, N∈{8,16,32,64}, $\delta_\text{global}=0.10$, $B_\text{boot}=1000$ | `configs/panel_a_full.yaml` | matches |
+| §4.5 Analysis 1 | bootstrap fraction $R^\mathrm{cert}_N\ge R^\mathrm{MC}_N$ on resampled queries | **FIXED in this pass** -- `run_full.py` now recomputes BOTH $R^\mathrm{cert}_b$ and $R^\mathrm{MC}_b$ on the same bootstrap-resampled instances and writes a `coverage_indicator_boot` column + `panel_a_bootstrap_coverage.csv` per cell | now matches |
+| §4.5 Analysis 2 | non-vacuity rates $R<1, <0.7, <0.3$ | `nonvacuous_lt_{1,0_7,0_3}` columns + `panel_a_nonvacuity_summary.csv` | matches |
+| §4.5 Analysis 3 | non-vacuity indicator analysis + stratified regime table + (optional) continuous regression | `analyze_panel_a.analyze_panel_a` (stratified) + `run_full.py` (indicators + stratified) | matches |
+| §4.5 Analysis 4 | baseline comparison: undercoverage, mean slack \| coverage, non-vacuity rate, Spearman rank vs $R_N^\mathrm{MC}$ | `run_full.py` baselines + `panel_a_baseline_summary.csv` | matches |
+| §4.6 | strict majority, single confirmatory target, interpretive targets | reports include warnings; no auto-tuning | matches |
+| §5.1 | observational, non-causal external grounding | explicit caveat in report and code comment | matches |
+| §5.4 | $\widehat C_{ij}$, $\widehat\rho_{ij}$, accuracy_i, accuracy_j, abs_accuracy_diff, n_shared, family_i, family_j, same_family, benchmark | `panel_b/pairwise_stats.build_pairwise_dataframe` | matches |
+| §5.5 | linear CKA on prompt-only representations, penultimate layer, probe set disjoint from correctness eval | `panel_b/cka.{linear_cka,assert_probe_correctness_disjoint,cka_layer_sweep}`; last-token convention now available via `pool="last_token"` in `hf_generate.extract_prompt_representation` | matches |
+| §5.6 | 6 analyses, 10000 perms | `analyze_alignment.py` (aggregate / benchmarkwise / row-col null / family-aware null / LOO / raw vs normalised / partial Spearman) | matches |
+| §5.7 | confirmatory target = aggregate Spearman > family-aware null q99; interpretive targets reported but not pass/fail | summary JSON + report flags `confirmatory_pass_family_aware` | matches |
+| §6 | Appendix-only Panel C, per-instance predictions only, no CKA, no representation claims | `panel_c/load_leaderboard_predictions.py` + `analyze_leaderboard.py`; report explicit | matches |
+| §7 | pre-registered: tie convention, $\delta_\text{global}=0.10$, Bonferroni $\delta_\text{cell}=\delta_\text{global}/C$, no manual $\eta$, fixed prompt pool / model lists / probe set / layer | all of the above now reflected in code and configs | matches |
+
+Two theory-implementation gaps were closed in this pass: (1) Bonferroni
+$\delta_\text{cell}=\delta_\text{global}/C$ is now computed automatically
+in `run_pilot.py` and `run_full.py` (with $C$ equal to the number of
+(protocol, benchmark) cells for the pilot and (protocol, benchmark,
+regime) cells for the full run, mirroring §3.3 and conservatively
+treating each stress-test regime as its own (L_alpha, U_F)
+construction); (2) the bootstrap in `run_full.py` now recomputes both
+$R^\mathrm{cert}$ and $R^\mathrm{MC}$ on the same bootstrap-resampled
+instances and exports `coverage_indicator_boot` and a per-cell
+`panel_a_bootstrap_coverage.csv`. A minor §5.5 robustness option
+(last-token pooling) was added to `extract_prompt_representation`.
+
+
 
 ## 1. Executive Summary
 
