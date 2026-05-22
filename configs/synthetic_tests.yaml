@@ -1,2 +1,24 @@
-seed: 0
-validate_only: true
+seed: 42
+output_dir: results/synthetic
+global_delta: 0.1
+validate_only: false
+synthetic:
+  M: 400
+  K: 32
+  N: 16
+  estimator_trials: 50
+  certificate_trials: 50
+  alpha_distribution:
+    name: beta
+    a: 12
+    b: 8
+  nonvacuity_high:
+    name: two_point
+    p: 0.5
+    a_low: 0.7
+    a_high: 0.9
+  nonvacuity_low:
+    name: two_point
+    p: 0.5
+    a_low: 0.48
+    a_high: 0.52
