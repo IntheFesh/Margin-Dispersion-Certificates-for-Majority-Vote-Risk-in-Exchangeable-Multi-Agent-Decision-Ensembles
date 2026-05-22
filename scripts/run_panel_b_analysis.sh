@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
-CONFIG_PATH="${1:-configs/synthetic_tests.yaml}"
-OUT_DIR="${2:-results}"
-python -c "print('Use Python entrypoints with config:', 'run_panel_b_analysis', '$CONFIG_PATH', '$OUT_DIR')"
+python - <<'PY'
+print('Use src.panel_b.analyze_alignment.run(...) with generated CSV paths')
+PY

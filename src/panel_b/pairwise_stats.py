@@ -1,9 +1,18 @@
+from __future__ import annotations
+import warnings
 import numpy as np
 
-def pairwise_q_statistic(x,y):
- x=np.asarray(x); y=np.asarray(y)
- if x.shape!=y.shape: raise ValueError("shape mismatch")
- if not np.all(np.isin(x,[0,1])) or not np.all(np.isin(y,[0,1])): raise ValueError("binary required")
- n11=np.sum((x==1)&(y==1)); n00=np.sum((x==0)&(y==0)); n10=np.sum((x==1)&(y==0)); n01=np.sum((x==0)&(y==1))
- d=n11*n00+n10*n01
- return 0.0 if d==0 else float((n11*n00-n10*n01)/d)
+
+def raw_covariance(x: np.ndarray, y: np.ndarray) -> float:
+    x=np.asarray(x,float); y=np.asarray(y,float)
+    if x.shape!=y.shape: raise ValueError("shape mismatch")
+    return float(np.mean((x-x.mean())*(y-y.mean())))
+
+
+def normalized_correlation(x: np.ndarray, y: np.ndarray) -> float:
+    x=np.asarray(x,float); y=np.asarray(y,float)
+    vx,vy=np.var(x),np.var(y)
+    if vx==0 or vy==0:
+        warnings.warn("zero variance model; rho undefined", RuntimeWarning)
+        return float("nan")
+    return float(raw_covariance(x,y)/np.sqrt(vx*vy))
