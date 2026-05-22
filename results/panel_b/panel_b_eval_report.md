@@ -1,9 +1,9 @@
-# Panel B Alignment Report
+# Panel B Evaluation Report
 
 - mode: validate_only
 - config_path: configs/panel_b.yaml
 - seed: 42
-- datetime_utc: 2026-05-22T22:34:38.253042+00:00
+- datetime_utc: 2026-05-22T22:34:37.129901+00:00
 - git_commit: 32792a2f61cd838630833b2ddd3914bbb4cb1c0c
 - num_instances: 0
 - num_models_or_samples: 0
@@ -20,15 +20,15 @@
 ```
 
 ## Main Metrics
-validate_only run; no inputs required
+validate_only run; no inference executed
 
 ## Figure Links
 - none
 
 ## Missing Outputs
+- panel_b_evaluation.csv
 - panel_b_pairwise_stats.csv
-- panel_b_cka.csv
 
 ## Warnings
 - Panel B is external grounding only; observational and non-causal.
-- Full alignment analysis requires real pairwise stats and CKA CSVs.
+- Full evaluation requires real Hugging Face model resources and probe/eval splits.
