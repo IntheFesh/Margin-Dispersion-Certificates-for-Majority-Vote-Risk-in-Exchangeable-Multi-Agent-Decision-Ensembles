@@ -1,0 +1,15 @@
+{
+  "estimator_mean_error": 0.0001227072808909436,
+  "coverage_rate": 1.0,
+  "nominal_target": 0.9,
+  "high_setting_R_cert": 1.0,
+  "low_setting_R_cert": 1.0,
+  "insufficiency": {
+    "mu1_mean": 0.6000000000000001,
+    "mu2_mean": 0.6,
+    "mu1_var": 0.04000000000000001,
+    "mu2_var": 0.039999999999999994,
+    "R3_mu1": 0.37599999999999995,
+    "R3_mu2": 0.3400000000000001
+  }
+}
