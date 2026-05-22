@@ -55,8 +55,18 @@ def run(cfg: dict, config_path: str = "") -> dict:
     _validate_inputs(df)
     seed = int(cfg["seed"])
     K_ref = int(cfg["K_ref"])
-    delta = float(cfg["global_delta"])
+    delta_global = float(cfg["global_delta"])
     B_boot = int(cfg["B_boot"])
+    # §3.3 / §7: Bonferroni adjustment. The paper defines C as the number of
+    # (protocol, benchmark) cells; we extend this conservatively to include
+    # regime (each stress-test regime has a separate (L_alpha, U_F)
+    # construction). Within a cell at fixed K_est, all N values share the
+    # statistical budget since the binomial tail is analytic.
+    cells = sorted({
+        (b, p, r) for b, p, r in df[["benchmark", "protocol", "regime"]].itertuples(index=False, name=None)
+    })
+    C = max(1, len(cells))
+    delta = delta_global / C
     rows = []
     boot = []
     for (bench, proto, reg), g in df.groupby(["benchmark", "protocol", "regime"]):
@@ -79,6 +89,8 @@ def run(cfg: dict, config_path: str = "") -> dict:
                     "N": int(N),
                     "M": int(X_est.shape[0]),
                     "K_ref": int(K_ref),
+                    "delta_global": delta_global,
+                    "delta_cell": delta,
                     "m_hat": float(base["margin_hat"]),
                     "F_hat_unbiased": float(base["F_hat_unbiased"]),
                     "F_hat_clipped": float(base["F_hat_clipped"]),
@@ -100,12 +112,18 @@ def run(cfg: dict, config_path: str = "") -> dict:
                     "nonvacuous_lt_0_7": int(cert["R_cert"] < 0.7),
                     "nonvacuous_lt_0_3": int(cert["R_cert"] < 0.3),
                 })
+                # §4.5 Analysis 1: bootstrap-resample queries within the cell;
+                # recompute BOTH R_cert and R_MC on the resampled instances and
+                # record per-replicate coverage = 1{R_cert_b >= R_MC_b}.
                 rng = np.random.default_rng(seed + int(N) * 17 + int(K_est) * 31)
-                M = X_est.shape[0]
+                M_cell = X_est.shape[0]
                 for b in range(B_boot):
-                    idx = rng.integers(0, M, size=M)
-                    xb = X_est[idx, :]
-                    cb = empirical_certificate_from_X(xb, int(N), delta)
+                    idx = rng.integers(0, M_cell, size=M_cell)
+                    xb_est = X_est[idx, :]
+                    xb_ref = X_ref[idx, :]
+                    a_ref_b = xb_ref.mean(axis=1)
+                    cb = empirical_certificate_from_X(xb_est, int(N), delta)
+                    R_MC_b = float(monte_carlo_reference_risk(int(N), a_ref_b))
                     boot.append({
                         "benchmark": bench,
                         "protocol": proto,
@@ -114,6 +132,8 @@ def run(cfg: dict, config_path: str = "") -> dict:
                         "N": int(N),
                         "boot_id": int(b),
                         "R_cert_boot": float(cb["R_cert"]),
+                        "R_MC_boot": R_MC_b,
+                        "coverage_indicator_boot": int(cb["R_cert"] >= R_MC_b),
                     })
     m = pd.DataFrame(rows)
     mb = pd.DataFrame(boot)
@@ -173,10 +193,23 @@ def run(cfg: dict, config_path: str = "") -> dict:
         })
     pd.DataFrame(baselines).to_csv(out / "panel_a_baseline_summary.csv", index=False)
 
+    # Bootstrap per-cell coverage rate against R_MC (§4.5 Analysis 1).
+    boot_cov = (
+        mb.groupby(["benchmark", "protocol", "regime", "K_est", "N"])["coverage_indicator_boot"]
+        .mean()
+        .reset_index(name="bootstrap_coverage_rate")
+    )
+    boot_cov.to_csv(out / "panel_a_bootstrap_coverage.csv", index=False)
+
     summary = {
         "num_cells": int(len(m)),
+        "C_protocol_benchmark_regime_cells": int(C),
+        "delta_global": delta_global,
+        "delta_cell": delta,
         "fraction_nonvacuous": float((m["R_cert"] < 1.0).mean()) if len(m) else 0.0,
         "coverage_rate_cert_vs_R_MC": float(m["coverage_cert"].mean()) if len(m) else 0.0,
+        "bootstrap_coverage_mean": float(boot_cov["bootstrap_coverage_rate"].mean()) if len(boot_cov) else float("nan"),
+        "bootstrap_coverage_min": float(boot_cov["bootstrap_coverage_rate"].min()) if len(boot_cov) else float("nan"),
         "stratified_nonvacuity": {k: float(v) for k, v in strat.items()},
         "baselines": baselines,
         "bootstrap_replicates_per_cell": B_boot,
@@ -186,9 +219,14 @@ def run(cfg: dict, config_path: str = "") -> dict:
     main_md_rows = [
         "| metric | value |",
         "|---|---|",
-        f"| cells | {summary['num_cells']} |",
+        f"| cells (rows) | {summary['num_cells']} |",
+        f"| (protocol,benchmark,regime) cells C | {C} |",
+        f"| delta_global | {delta_global:.4f} |",
+        f"| delta_cell (Bonferroni) | {delta:.6f} |",
         f"| non-vacuous fraction (R_cert<1) | {summary['fraction_nonvacuous']:.4f} |",
-        f"| coverage vs R_MC | {summary['coverage_rate_cert_vs_R_MC']:.4f} |",
+        f"| pointwise coverage vs R_MC | {summary['coverage_rate_cert_vs_R_MC']:.4f} |",
+        f"| bootstrap coverage mean | {summary['bootstrap_coverage_mean']:.4f} |",
+        f"| bootstrap coverage min | {summary['bootstrap_coverage_min']:.4f} |",
         "",
         "| method | undercov | mean slack | non-vac rate | Spearman vs R_MC |",
         "|---|---|---|---|---|",

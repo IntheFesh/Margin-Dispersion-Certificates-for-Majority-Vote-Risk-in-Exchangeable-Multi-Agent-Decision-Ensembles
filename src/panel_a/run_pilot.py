@@ -59,7 +59,11 @@ def run(cfg: dict, config_path: str = "") -> dict:
     seed = int(cfg["seed"])
     K_ref = int(cfg["K_ref"])
     K_est = int(cfg["K_est"])
-    delta = float(cfg["global_delta"])
+    delta_global = float(cfg["global_delta"])
+    # §3.3 / §7: Bonferroni adjustment across (protocol, benchmark) cells.
+    cells = sorted({(b, p) for b, p in df[["benchmark", "protocol"]].itertuples(index=False, name=None)})
+    C = max(1, len(cells))
+    delta = delta_global / C
     rows = []
     invalid_rate_acc = 0.0
     n_total = 0
@@ -106,6 +110,9 @@ def run(cfg: dict, config_path: str = "") -> dict:
     invalid_rate = float(df["invalid_parse"].mean()) if "invalid_parse" in df.columns else 0.0
     summary = {
         "num_cells": int(len(met)),
+        "C_protocol_benchmark_cells": int(C),
+        "delta_global": delta_global,
+        "delta_cell": delta,
         "fraction_nonvacuous": frac_nonv,
         "warning_near_universal_vacuity": frac_nonv < 0.2,
         "coverage_rate_vs_R_MC": coverage_rate,
@@ -119,7 +126,10 @@ def run(cfg: dict, config_path: str = "") -> dict:
         )
     main_md = (
         f"| metric | value |\n|---|---|\n"
-        f"| cells | {summary['num_cells']} |\n"
+        f"| cells (rows) | {summary['num_cells']} |\n"
+        f"| (protocol,benchmark) cells C | {C} |\n"
+        f"| delta_global | {delta_global:.4f} |\n"
+        f"| delta_cell (Bonferroni) | {delta:.6f} |\n"
         f"| non-vacuous fraction (R_cert<1) | {frac_nonv:.4f} |\n"
         f"| coverage vs R_MC | {coverage_rate:.4f} |\n"
         f"| invalid parse rate | {invalid_rate:.4f} |\n"

@@ -60,11 +60,19 @@ def generate_greedy(model, tok, prompts: Iterable[str], max_new_tokens: int = 25
     return outs
 
 
-def extract_prompt_representation(model, tok, prompts: Iterable[str], layer: int | str = "penultimate") -> list:
-    """Extract hidden-state representations from prompt tokens (mean over
-    the prompt sequence) at the requested layer. Used by Panel B CKA.
+def extract_prompt_representation(
+    model,
+    tok,
+    prompts: Iterable[str],
+    layer: int | str = "penultimate",
+    pool: str = "mean",
+) -> list:
+    """Extract hidden-state representations from prompt tokens at the
+    requested layer. Used by Panel B CKA.
 
     layer: int index, "last", "penultimate", or "mean_last_4".
+    pool: "mean" (default per paper) or "last_token" (Appendix B
+    robustness alternative).
 
     Raises RuntimeError if hidden-state extraction fails or the requested
     layer is out of range; no silent fallback.
@@ -96,7 +104,13 @@ def extract_prompt_representation(model, tok, prompts: Iterable[str], layer: int
                 h = torch.stack(hs[-4:]).mean(dim=0)
             else:
                 raise RuntimeError(f"unsupported layer spec: {layer}")
-            rep = h.squeeze(0).mean(dim=0).detach().cpu().numpy()
+            h0 = h.squeeze(0)  # [T, d]
+            if pool == "mean":
+                rep = h0.mean(dim=0).detach().cpu().numpy()
+            elif pool == "last_token":
+                rep = h0[-1].detach().cpu().numpy()
+            else:
+                raise RuntimeError(f"unsupported pool spec: {pool}")
         except Exception as e:
             raise RuntimeError(f"representation extraction failed: {e}") from e
         reps.append(rep)

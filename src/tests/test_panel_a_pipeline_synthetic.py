@@ -51,6 +51,8 @@ def test_run_pilot_on_synthetic_csv(tmp_path):
     }
     summary = run_pilot(cfg, config_path=str(in_csv))
     assert summary["num_cells"] > 0
+    assert summary["C_protocol_benchmark_cells"] == 2  # 1 benchmark x 2 protocols
+    assert summary["delta_cell"] < summary["delta_global"]
     assert Path(cfg["output_dir"], "pilot_metrics.csv").exists()
     assert Path(cfg["output_dir"], "pilot_summary.json").exists()
     assert Path(cfg["output_dir"], "pilot_report.md").exists()
@@ -75,16 +77,22 @@ def test_run_full_on_synthetic_csv(tmp_path):
     }
     summary = run_full(cfg, config_path=str(in_csv))
     assert summary["num_cells"] > 0
+    assert summary["C_protocol_benchmark_regime_cells"] == 2  # 1 bench x 1 proto x 2 regimes
+    assert summary["delta_cell"] < summary["delta_global"]
     for f in (
         "panel_a_cell_metrics.csv",
         "panel_a_bootstrap_metrics.csv",
         "panel_a_baseline_comparison.csv",
         "panel_a_nonvacuity_summary.csv",
         "panel_a_baseline_summary.csv",
+        "panel_a_bootstrap_coverage.csv",
         "panel_a_summary.json",
         "panel_a_report.md",
     ):
         assert Path(cfg["output_dir"], f).exists(), f
+    # Bootstrap metrics now include the spec'd coverage indicator (§4.5).
+    boot = pd.read_csv(Path(cfg["output_dir"], "panel_a_bootstrap_metrics.csv"))
+    assert {"R_cert_boot", "R_MC_boot", "coverage_indicator_boot"}.issubset(boot.columns)
 
 
 def test_run_pilot_rejects_missing_columns(tmp_path):
