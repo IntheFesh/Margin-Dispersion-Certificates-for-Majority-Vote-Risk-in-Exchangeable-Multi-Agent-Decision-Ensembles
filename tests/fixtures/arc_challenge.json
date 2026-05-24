@@ -1,0 +1,12 @@
+[
+  {"raw": "The answer is A.", "gold": "A", "expected_answer": "A", "expected_invalid": false, "expected_label": 1},
+  {"raw": "(B)", "gold": "B", "expected_answer": "B", "expected_invalid": false, "expected_label": 1},
+  {"raw": "Answer: C", "gold": "D", "expected_answer": "C", "expected_invalid": false, "expected_label": 0},
+  {"raw": "D", "gold": "D", "expected_answer": "D", "expected_invalid": false, "expected_label": 1},
+  {"raw": "I think the answer is B because it fits.", "gold": "B", "expected_answer": "B", "expected_invalid": false, "expected_label": 1},
+  {"raw": "The answer is A", "gold": "A", "expected_answer": "A", "expected_invalid": false, "expected_label": 1},
+  {"raw": "answer is d", "gold": "D", "expected_answer": "D", "expected_invalid": false, "expected_label": 1},
+  {"raw": "Option B is correct", "gold": "B", "expected_answer": "B", "expected_invalid": false, "expected_label": 1},
+  {"raw": "I am not sure about this one.", "gold": "A", "expected_answer": null, "expected_invalid": true, "expected_label": 0},
+  {"raw": "Could be A or C.", "gold": "A", "expected_answer": null, "expected_invalid": true, "expected_label": 0}
+]

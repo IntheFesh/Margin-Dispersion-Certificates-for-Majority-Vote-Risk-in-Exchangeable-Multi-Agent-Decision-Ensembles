@@ -1,0 +1,18 @@
+# Protocol A2: randomized model-family ensemble.
+# Each sample draws one model from the pool.
+# Models are served SERIALLY (see section 6.12 GPU policy).
+benchmarks: [arc_challenge, gsm8k]
+model_pool:
+  - {name: qwen2.5-7b-instruct,    weight: 0.4}
+  - {name: llama3.2-3b-instruct,   weight: 0.3}
+  - {name: qwen2.5-14b-instruct,   weight: 0.3}
+M_full:     500
+K_full:     256
+K_ref:      256
+oracle_fraction: 0.5
+N_values:   [3, 7, 15, 31, 63, 127]
+temperature: 0.7
+top_p:       0.95
+max_tokens:  512
+delta_global: 0.05
+seed_base: 0xBEEF

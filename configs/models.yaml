@@ -1,0 +1,24 @@
+qwen2.5-7b-instruct:
+  hf_path:    Qwen/Qwen2.5-7B-Instruct
+  vllm:
+    port: 8000
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    dtype: auto
+    enforce_eager: false
+llama3.2-3b-instruct:
+  hf_path:    meta-llama/Llama-3.2-3B-Instruct
+  vllm:
+    port: 8001
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    dtype: auto
+    enforce_eager: false
+qwen2.5-14b-instruct:
+  hf_path:    Qwen/Qwen2.5-14B-Instruct
+  vllm:
+    port: 8002
+    gpu_memory_utilization: 0.90
+    max_model_len: 4096
+    dtype: auto
+    enforce_eager: false

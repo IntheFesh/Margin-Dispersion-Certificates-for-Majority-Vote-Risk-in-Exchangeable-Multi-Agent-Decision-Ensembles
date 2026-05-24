@@ -1,0 +1,12 @@
+[
+  {"raw": "The answer is 42.", "gold": "42", "expected_answer": "42", "expected_invalid": false, "expected_label": 1},
+  {"raw": "After adding everything up #### 1,234", "gold": "1234", "expected_answer": "1234", "expected_invalid": false, "expected_label": 1},
+  {"raw": "So we get 18 apples.", "gold": "18", "expected_answer": "18", "expected_invalid": false, "expected_label": 1},
+  {"raw": "The answer is -7", "gold": "-7", "expected_answer": "-7", "expected_invalid": false, "expected_label": 1},
+  {"raw": "The answer is 3.5", "gold": "3.5", "expected_answer": "3.5", "expected_invalid": false, "expected_label": 1},
+  {"raw": "answer is $1,000", "gold": "1000", "expected_answer": "1000", "expected_invalid": false, "expected_label": 1},
+  {"raw": "The answer is 10", "gold": "12", "expected_answer": "10", "expected_invalid": false, "expected_label": 0},
+  {"raw": "After computing the total #### 256", "gold": "256", "expected_answer": "256", "expected_invalid": false, "expected_label": 1},
+  {"raw": "Final: 7 plus 8 is 15.", "gold": "15", "expected_answer": "15", "expected_invalid": false, "expected_label": 1},
+  {"raw": "I cannot solve this problem.", "gold": "5", "expected_answer": null, "expected_invalid": true, "expected_label": 0}
+]

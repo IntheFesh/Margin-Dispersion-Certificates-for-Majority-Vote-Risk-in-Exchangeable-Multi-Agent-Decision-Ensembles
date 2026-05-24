@@ -1,4 +1,14 @@
 __pycache__/
 *.pyc
-results/**/*.png
-results/**/*.pdf
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+# Generated large outputs (keep dir structure via .gitkeep, ignore bulky artifacts)
+outputs/**/*.jsonl
+outputs/**/*.parquet
+outputs/figures/*.png
+outputs/figures/*.pdf
+# HF datasets / model caches
+.cache/
+hf_cache/

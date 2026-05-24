@@ -1,4 +1,0 @@
-seed: 0
-validate_only: true
-output_dir: results/tmp
-strict_majority: true
