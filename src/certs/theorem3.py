@@ -55,7 +55,18 @@ def B_N_star(
     if n_grid < 3:
         raise ValueError("n_grid must be >= 3")
 
-    a = np.linspace(0.0, 1.0, n_grid)
+    # Degenerate F = 0: the only distribution with mean alpha_bar and zero
+    # variance is the point mass delta_{alpha_bar}, so the envelope is exactly
+    # g_N(alpha_bar). Handling it here avoids LP infeasibility when alpha_bar
+    # is not on the uniform grid (the common case for empirical alpha_bar_hat).
+    if F <= 1e-12:
+        val = float(min(1.0, max(0.0, float(g_N(alpha_bar, N)))))
+        return (val, val) if return_dual else val
+
+    # Insert alpha_bar as an explicit grid node so the mean constraint is
+    # exactly representable and the LP stays feasible for any 0 < F <=
+    # alpha_bar(1-alpha_bar), even when alpha_bar is off the uniform grid.
+    a = np.union1d(np.linspace(0.0, 1.0, n_grid), np.array([float(alpha_bar)]))
     g = np.asarray(g_N(a, N), dtype=float)
     m2 = alpha_bar ** 2 + F
 

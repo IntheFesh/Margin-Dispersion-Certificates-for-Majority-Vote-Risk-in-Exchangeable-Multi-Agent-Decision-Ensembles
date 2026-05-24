@@ -26,10 +26,10 @@ from src.utils.provenance import capture, copy_config
 _TABLES: tuple[tuple[str, str, bool], ...] = (
     ("analysis_1_bootstrap", "Analysis 1: bootstrap certificate coverage of the MC majority-vote risk.", True),
     ("analysis_2_nonvacuity", "Analysis 2: non-vacuity rates of the issued certificate.", True),
-    ("analysis_3_refusal_taxonomy", "Analysis 3: refusal-mode decomposition.", False),
-    ("analysis_4_bidirectional", "Analysis 4: bidirectional certification rates.", False),
+    ("analysis_3_operating_regime", "Analysis 3: operating-regime stratification of certificate informativeness.", False),
+    ("analysis_4_baseline_envelope", "Analysis 4: limit-case baseline envelope vs the margin-dispersion certificate.", False),
     ("analysis_5_budget_curves", "Analysis 5: certificate vs ensemble-size budget curves.", False),
-    ("analysis_6_sharpness", "Analysis 6: certificate sharpness vs the sharp two-moment envelope.", False),
+    ("analysis_6_refusal_modes", "Analysis 6: refusal-mode decomposition.", False),
     ("analysis_7_conservativeness", "Analysis 7: four-component conservativeness decomposition.", False),
 )
 

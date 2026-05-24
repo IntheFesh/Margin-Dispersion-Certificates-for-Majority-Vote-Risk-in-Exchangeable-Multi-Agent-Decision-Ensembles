@@ -5,11 +5,17 @@ rows produced by ``04_panel_a_full.py``) plus the per-cell estimation/oracle
 JSONL matrices, and runs the seven analyses implemented under
 ``src.analysis``:
 
-  1. instance-level bootstrap of certificate coverage vs R_N^MC;
-  2. non-vacuity rates of the issued certificate;
-  3-7. (nonvacuity by group, refusal taxonomy, budget curves, sharpness, and
-        conservativeness decomposition) -- dispatched by module name so this
-        orchestrator stays decoupled from each analysis's exact signature.
+  1. instance-level bootstrap of certificate coverage vs R_N^MC
+     (a1_mc_bootstrap.analysis_1_bootstrap);
+  2. non-vacuity rates of the issued certificate (a2_nonvacuity.nonvacuity_rates);
+  3. operating-regime stratification (a3_operating_regime.operating_regime);
+  4. limit-case baseline envelope (a4_baseline_envelope.baseline_envelope);
+  5. certificate-vs-N budget curves (a5_budget_curves.budget_curves);
+  6. refusal-mode decomposition (a6_refusal_modes.refusal_decomposition);
+  7. four-component conservativeness decomposition
+     (a7_conservativeness.conservativeness_decomposition).
+  Analyses 3-7 are dispatched by module name so this orchestrator stays
+  decoupled from each analysis's exact signature.
 
 Each analysis writes one CSV under ``outputs/analyses/`` (e.g.
 ``analysis_1_bootstrap.csv``, ..., ``analysis_7_conservativeness.csv``). The
@@ -31,16 +37,17 @@ from typing import Callable
 from src.utils.logging import JsonlLogger
 from src.utils.provenance import capture, copy_config
 
-# (module suffix, output csv stem). a1/a2 have known signatures and are wired
-# explicitly; a3..a7 are dispatched generically by their public callable.
+# (module suffix, public callable). a1/a2 have known signatures and are wired
+# explicitly below; a3..a7 are dispatched generically. a3 returns a dict (one
+# DataFrame section plus scalar/dict sections) and is handled accordingly.
 _ANALYSIS_MODULES: tuple[tuple[str, str], ...] = (
     ("a1_mc_bootstrap", "analysis_1_bootstrap"),
-    ("a2_nonvacuity", "analysis_2_nonvacuity"),
-    ("a3_refusal_taxonomy", "analysis_3_refusal_taxonomy"),
-    ("a4_bidirectional", "analysis_4_bidirectional"),
-    ("a5_budget_curves", "analysis_5_budget_curves"),
-    ("a6_sharpness", "analysis_6_sharpness"),
-    ("a7_conservativeness", "analysis_7_conservativeness"),
+    ("a2_nonvacuity", "nonvacuity_rates"),
+    ("a3_operating_regime", "operating_regime"),
+    ("a4_baseline_envelope", "baseline_envelope"),
+    ("a5_budget_curves", "budget_curves"),
+    ("a6_refusal_modes", "refusal_decomposition"),
+    ("a7_conservativeness", "conservativeness_decomposition"),
 )
 
 
@@ -182,20 +189,51 @@ def main() -> None:
     logger.event("analysis.done", analysis="a2", csv=str(a2_path), n_rows=int(len(a2_df)))
 
     # --- Analyses 3-7: dispatched generically over the cells table. ----------
-    # Each is invoked with the per-cell certificate DataFrame; whatever frame it
-    # returns is written verbatim. Signature coupling is intentionally avoided.
+    # Each is invoked with the per-cell certificate DataFrame. A DataFrame
+    # result is written verbatim to analysis_{idx}_{name}.csv. A dict result
+    # (e.g. a3 operating_regime) writes its primary DataFrame section to the
+    # CSV, any further DataFrame sections to analysis_{idx}_{name}__{key}.csv,
+    # and the remaining scalar/dict sections to a JSON sidecar. Signature
+    # coupling is intentionally avoided.
     for module_suffix, preferred in _ANALYSIS_MODULES[2:]:
         fn = _resolve(module_suffix, preferred)
         result = fn(cells_df)
-        if not isinstance(result, pd.DataFrame):
-            raise TypeError(
-                f"analysis {module_suffix} must return a DataFrame, got {type(result)!r}"
-            )
         idx = module_suffix.split("_", 1)[0].lstrip("a")
-        out_path = output_dir / f"analysis_{idx}_{module_suffix.split('_', 1)[1]}.csv"
-        result.to_csv(out_path, index=False)
-        written.append(str(out_path))
-        logger.event("analysis.done", analysis=module_suffix, csv=str(out_path), n_rows=int(len(result)))
+        name = module_suffix.split("_", 1)[1]
+        stem = f"analysis_{idx}_{name}"
+        if isinstance(result, pd.DataFrame):
+            out_path = output_dir / f"{stem}.csv"
+            result.to_csv(out_path, index=False)
+            written.append(str(out_path))
+            n_rows = int(len(result))
+        elif isinstance(result, dict):
+            frames = {k: v for k, v in result.items() if isinstance(v, pd.DataFrame)}
+            non_frames = {k: v for k, v in result.items() if not isinstance(v, pd.DataFrame)}
+            if not frames:
+                raise TypeError(
+                    f"analysis {module_suffix} returned a dict with no DataFrame section"
+                )
+            # Prefer the canonical tabular section as the primary CSV.
+            primary_key = "stratified_regime" if "stratified_regime" in frames else next(iter(frames))
+            primary = frames.pop(primary_key)
+            out_path = output_dir / f"{stem}.csv"
+            primary.to_csv(out_path, index=False)
+            written.append(str(out_path))
+            n_rows = int(len(primary))
+            for key, extra in frames.items():
+                extra_path = output_dir / f"{stem}__{key}.csv"
+                extra.to_csv(extra_path, index=False)
+                written.append(str(extra_path))
+            if non_frames:
+                json_path = output_dir / f"{stem}.json"
+                with json_path.open("w", encoding="utf-8") as fh:
+                    json.dump(non_frames, fh, indent=2, default=str)
+                written.append(str(json_path))
+        else:
+            raise TypeError(
+                f"analysis {module_suffix} must return a DataFrame or dict, got {type(result)!r}"
+            )
+        logger.event("analysis.done", analysis=module_suffix, csv=stem, n_rows=n_rows)
 
     logger.event("analyses.complete", n_csv=len(written), output_dir=str(output_dir))
     print(f"Analyses 1-7 complete; wrote {len(written)} CSVs to {output_dir}:")
