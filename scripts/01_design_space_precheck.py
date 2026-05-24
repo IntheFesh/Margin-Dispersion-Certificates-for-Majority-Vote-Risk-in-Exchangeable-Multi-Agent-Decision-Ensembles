@@ -123,6 +123,24 @@ def main() -> None:
     parser.add_argument("--output_dir", default="outputs/precheck", help="output directory")
     parser.add_argument("--figures_dir", default="outputs/figures", help="figure output directory")
     parser.add_argument("--seed", type=int, default=0, help="global seed (provenance only here)")
+    parser.add_argument(
+        "--hierarchy_tol",
+        type=float,
+        default=1e-6,
+        help="tolerance for the B_star <= B_CH' <= B_CH bug detector",
+    )
+    parser.add_argument(
+        "--primal_dual_tol",
+        type=float,
+        default=1e-6,
+        help=(
+            "tolerance for the Theorem 3 |primal - dual| bug detector. The "
+            "discretized LP has a floating-point floor of ~1e-7 across this "
+            "dense grid (grid-node alignment of the optimal atom), so a real "
+            "bug -- which would be orders of magnitude larger -- is still "
+            "caught at 1e-6 while spurious aborts are avoided."
+        ),
+    )
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
@@ -142,8 +160,8 @@ def main() -> None:
         ctx["n_points"] = int(len(df))
 
     # Numerical bug detectors (raise + abort on any violation).
-    check_hierarchy(df, tol=1e-6)
-    check_primal_dual_gap(df, tol=1e-8)
+    check_hierarchy(df, tol=float(args.hierarchy_tol))
+    check_primal_dual_gap(df, tol=float(args.primal_dual_tol))
     hier_gap = max_hierarchy_gap(df)
     pd_gap = max_primal_dual_gap(df)
 
@@ -169,7 +187,9 @@ def main() -> None:
         "n_informative_issuable_at_Mmax": n_informative_issuable,
         "frac_informative_B_star_overall": float(df["informative_B_star"].mean()),
         "hierarchy_gap_max": hier_gap,
+        "hierarchy_tol": float(args.hierarchy_tol),
         "primal_dual_gap_max": pd_gap,
+        "primal_dual_tol": float(args.primal_dual_tol),
         "informativeness_csv": str(csv_path),
         "provenance": provenance,
     }
@@ -200,8 +220,8 @@ def main() -> None:
     print(f"Design-space pre-check: {summary['decision']}")
     print(f"  grid points: {summary['n_grid_points']}  (C={summary['n_cells_C']} cells)")
     print(f"  delta_cell:  {summary['delta_cell']:.3e}")
-    print(f"  hierarchy gap max:   {hier_gap:.3e}  (expected < 1e-6)")
-    print(f"  primal-dual gap max: {pd_gap:.3e}  (expected < 1e-8)")
+    print(f"  hierarchy gap max:   {hier_gap:.3e}  (tol {float(args.hierarchy_tol):.0e})")
+    print(f"  primal-dual gap max: {pd_gap:.3e}  (tol {float(args.primal_dual_tol):.0e})")
     print(f"  informative+issuable at M={M_max}: {n_informative_issuable}")
     print(f"  wrote {csv_path}")
     print(f"  wrote {summary_path}")

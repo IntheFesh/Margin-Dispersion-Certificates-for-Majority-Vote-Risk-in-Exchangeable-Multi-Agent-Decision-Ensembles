@@ -1,8 +1,9 @@
 """Paper-ready matplotlib styling (pure matplotlib; NO seaborn).
 
 ``apply_style()`` sets global rcParams for the v12 figures, ``REGION_LABELS``
-holds the canonical design-space region names (NEVER "safe"/"unsafe"), and
-``COLORBLIND_COLORS`` is a small Wong/Okabe-Ito colorblind-friendly palette.
+holds the canonical design-space region names (certified low-risk /
+intermediate / uninformative-certificate), and ``COLORBLIND_COLORS`` is a
+small Wong/Okabe-Ito colorblind-friendly palette.
 """
 from __future__ import annotations
 
@@ -15,14 +16,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # Canonical region labels for the design-space figure. These are the ONLY
-# permitted region names in v12: do not substitute "safe"/"unsafe".
+# permitted region names in v12; the certificate is an upper bound, not a
+# tight risk estimate, so the regions describe certificate informativeness.
 REGION_LABELS: dict[str, str] = {
     "low": "certified low-risk",
     "mid": "intermediate",
     "high": "uninformative-certificate",
 }
 
-# Okabe-Ito colorblind-safe palette (hex), ordered for categorical use.
+# Okabe-Ito colorblind-friendly palette (hex), ordered for categorical use.
 COLORBLIND_COLORS: list[str] = [
     "#0072B2",  # blue
     "#D55E00",  # vermillion
