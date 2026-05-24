@@ -1,11 +1,11 @@
-numpy
-pandas
-scipy
-scikit-learn
-matplotlib
-pyyaml
-tqdm
-pytest
-torch
-transformers
-datasets
+numpy>=1.26
+scipy>=1.11
+pandas>=2.0
+matplotlib>=3.8
+pydantic>=2.0
+pyyaml>=6.0
+tqdm>=4.66
+openai>=1.30
+datasets>=2.18
+# vLLM is the inference engine for Panel A execution (Phase 1.1+).
+# Install separately on the GPU host: pip install "vllm>=0.6"

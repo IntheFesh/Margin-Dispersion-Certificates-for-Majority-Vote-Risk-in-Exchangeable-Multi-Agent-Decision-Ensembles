@@ -4,11 +4,34 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "margin-dispersion-certificates"
-version = "0.1.0"
+version = "12.0.0"
+description = "Margin-Dispersion Certificates for Strict Success-Majority Risk in Exchangeable Multi-Agent Decision Ensembles (Panel A)"
 requires-python = ">=3.10"
 dependencies = [
-  "numpy","pandas","scipy","scikit-learn","matplotlib","pyyaml","tqdm","pytest","torch","transformers","datasets"
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "pandas>=2.0",
+  "matplotlib>=3.8",
+  "pydantic>=2.0",
+  "pyyaml>=6.0",
+  "tqdm>=4.66",
+  "openai>=1.30",
+  "datasets>=2.18",
 ]
 
+[project.optional-dependencies]
+serve = ["vllm>=0.6"]
+dev = ["pytest>=7.4", "mypy>=1.8", "black>=24.0", "ruff>=0.4"]
+
 [tool.pytest.ini_options]
-testpaths = ["src/tests"]
+testpaths = ["tests"]
+
+[tool.mypy]
+files = ["src/certs"]
+strict = true
+
+[tool.ruff]
+line-length = 100
+
+[tool.black]
+line-length = 100

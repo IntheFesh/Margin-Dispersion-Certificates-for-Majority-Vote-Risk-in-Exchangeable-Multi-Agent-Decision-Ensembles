@@ -1,0 +1,12 @@
+primary_target:
+  name: bootstrap_coverage_panel_a
+  description: >
+    Analysis 1 bootstrap comparison must attain pre-specified
+    level 1 - delta_global = 0.95 against high-replication MC proxy.
+  threshold: 0.95
+  delta_global: 0.05
+interpretive_targets:
+  - {name: non_vacuity_rate,              direction_only: true}
+  - {name: bidirectional_certification_rate, direction_only: true}
+  - {name: refusal_mode_decomposition,    qualitative: true}
+  - {name: conservativeness_decomposition, qualitative: true}

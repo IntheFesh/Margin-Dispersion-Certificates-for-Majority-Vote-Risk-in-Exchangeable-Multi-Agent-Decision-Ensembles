@@ -1,0 +1,12 @@
+[
+  {"raw": "The answer is A.", "gold": "A", "expected_answer": "A", "expected_invalid": false, "expected_label": 1},
+  {"raw": "(C)", "gold": "C", "expected_answer": "C", "expected_invalid": false, "expected_label": 1},
+  {"raw": "B", "gold": "B", "expected_answer": "B", "expected_invalid": false, "expected_label": 1},
+  {"raw": "answer: D", "gold": "D", "expected_answer": "D", "expected_invalid": false, "expected_label": 1},
+  {"raw": "The answer is A", "gold": "B", "expected_answer": "A", "expected_invalid": false, "expected_label": 0},
+  {"raw": "answer is c", "gold": "C", "expected_answer": "C", "expected_invalid": false, "expected_label": 1},
+  {"raw": "The correct option is D.", "gold": "D", "expected_answer": "D", "expected_invalid": false, "expected_label": 1},
+  {"raw": "Option B", "gold": "B", "expected_answer": "B", "expected_invalid": false, "expected_label": 1},
+  {"raw": "Unclear from the passage.", "gold": "A", "expected_answer": null, "expected_invalid": true, "expected_label": 0},
+  {"raw": "A and B both seem right.", "gold": "A", "expected_answer": null, "expected_invalid": true, "expected_label": 0}
+]

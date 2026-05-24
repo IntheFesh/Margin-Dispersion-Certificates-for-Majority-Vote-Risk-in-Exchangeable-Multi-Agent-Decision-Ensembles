@@ -1,0 +1,27 @@
+arc_challenge:
+  hf_dataset: allenai/ai2_arc
+  config: ARC-Challenge
+  split: test
+  max_instances: 500
+  answer_type: single_letter
+  valid_labels: [A, B, C, D]
+gsm8k:
+  hf_dataset: openai/gsm8k
+  config: main
+  split: test
+  max_instances: 500
+  answer_type: single_number
+  numeric_tolerance: 0
+mmlu_subset:
+  hf_dataset: cais/mmlu
+  config: all
+  split: test
+  subjects:
+    - college_mathematics
+    - formal_logic
+    - high_school_mathematics
+    - abstract_algebra
+    - machine_learning
+  max_instances_per_subject: 100
+  answer_type: single_letter
+  valid_labels: [A, B, C, D]
