@@ -3,8 +3,9 @@
 Every output file (JSONL / JSON / CSV) is validated against these schemas
 before being written. Schema violations halt execution.
 
-Note: the Panel A correctness record does NOT include `scale` or `family`
-fields (those were Panel B fields; Panel B is not part of this codebase).
+Note: the Panel A correctness record deliberately does NOT include `scale`
+or `family` fields; the per-(instance, sample) schema is exactly the set of
+columns below.
 """
 from __future__ import annotations
 from typing import Literal, Optional

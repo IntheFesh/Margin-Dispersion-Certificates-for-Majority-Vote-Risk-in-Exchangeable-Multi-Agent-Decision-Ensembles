@@ -3,8 +3,8 @@
 The piecewise closed form C_[0,1](alpha_bar, F, eta) is the sharp two-moment
 upper bound on mu([0, 1/2 + eta]) over P([0,1]) with mean=alpha_bar, var=F.
 
-The Case A/B split is governed by the sign of p_0, the lower atom of the
-(unconstrained) optimal two-point distribution on R matching the
+The Case A/B split is governed by the sign of p_0, the position of the lower
+atom of the (unconstrained) optimal two-point distribution on R matching the
 mean-variance constraints:
 
   * Case A (p_0 >= 0): F <= (1-alpha_bar)(m-eta). The unconstrained
@@ -12,9 +12,8 @@ mean-variance constraints:
   * Case B (p_0 = 0): F > (1-alpha_bar)(m-eta). The optimizer is pushed
     against the lower boundary 0.
 
-Do NOT describe this split as "Hausdorff admissibility"; that was an
-incorrect terminological framing in the Appendix A draft v0. Derivation
-reference: Appendix A.5 (v12).
+The characterization is purely the p_0 >= 0 vs p_0 = 0 boundary condition.
+Derivation reference: Appendix A.5 (v12).
 """
 from __future__ import annotations
 import math
