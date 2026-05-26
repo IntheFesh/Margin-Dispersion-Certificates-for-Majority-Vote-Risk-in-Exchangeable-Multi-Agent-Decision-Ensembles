@@ -29,10 +29,10 @@ import pandas as pd
 # descriptive ``component_*`` names emitted by src.analysis.a7_conservativeness.
 _LAYER_ORDER: tuple[str, ...] = ("A", "B", "C", "D")
 _LAYER_ALIASES: dict[str, tuple[str, ...]] = {
-    "A": ("A", "component_A"),
-    "B": ("B", "component_B"),
-    "C": ("C", "component_C"),
-    "D": ("D", "component_D"),
+    "A": ("A", "component_A", "gap_A"),
+    "B": ("B", "component_B", "gap_B"),
+    "C": ("C", "component_C", "gap_C"),
+    "D": ("D", "component_D", "gap_D"),
 }
 _LAYER_DESCRIPTIONS: dict[str, str] = {
     "A": "A: information loss",

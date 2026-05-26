@@ -91,10 +91,20 @@ def empirical_certificate(
     m2_hat = second_moment_hat(X)
     eps = hoeffding_radius(delta_cell, M)
 
-    L_alpha = alpha_hat - eps
-    U_alpha = alpha_hat + eps
-    U_2 = m2_hat + eps
-    U_F = min(0.25, max(0.0, U_2 - L_alpha ** 2))
+    # Clip all confidence bounds to their natural ranges:
+    # alpha is a probability, so L_alpha, U_alpha in [0,1];
+    # E[alpha^2] in [0,1] for alpha in [0,1], so U_2 in [0,1].
+    L_alpha = max(0.0, alpha_hat - eps)
+    U_alpha = min(1.0, alpha_hat + eps)
+    U_2 = min(1.0, max(0.0, m2_hat + eps))
+    # Admissibility envelope: F = E[alpha^2] - (E[alpha])^2 = Var(alpha) <= alpha_bar(1 - alpha_bar).
+    # Worst-case over alpha_bar in [L_alpha, U_alpha]:
+    if L_alpha <= 0.5 <= U_alpha:
+        adm_max = 0.25
+    else:
+        adm_max = max(L_alpha * (1.0 - L_alpha), U_alpha * (1.0 - U_alpha))
+    # U_F is the tightest of: Hausdorff ceiling 1/4, admissibility envelope, Hoeffding raw bound.
+    U_F = min(0.25, adm_max, max(0.0, U_2 - L_alpha ** 2))
     m_L = L_alpha - 0.5
     m_beta_L = (1.0 - U_alpha) - 0.5
 

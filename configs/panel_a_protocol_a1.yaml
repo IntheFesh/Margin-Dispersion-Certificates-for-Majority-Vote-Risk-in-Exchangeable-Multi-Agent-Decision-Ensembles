@@ -1,24 +1,25 @@
-# Protocol A1: prompt-randomized self-consistency.
-# Each cell = one (benchmark, model) combination.
-#
-# Estimation/oracle split is INSTANCE-LEVEL:
-#   - M_full * oracle_fraction instances form the ORACLE pool;
-#     each oracle instance is sampled K_ref times for R_N^MC.
-#   - M_full * (1 - oracle_fraction) instances form the ESTIMATION
-#     pool; each estimation instance is sampled K_full times for
-#     certificate construction.
-#   - The two pools are DISJOINT at the instance level. Sample columns
-#     are NEVER split across pools.
-benchmarks: [arc_challenge, gsm8k, mmlu_subset]
-models:     [qwen2.5-7b-instruct, llama3.2-3b-instruct, qwen2.5-14b-instruct]
-M_full:     500
-K_full:     256          # samples per estimation-pool instance
-K_ref:      256          # samples per oracle-pool instance
-oracle_fraction: 0.5     # 0.5 -> 250 estimation + 250 oracle instances
-N_values:   [3, 7, 15, 31, 63, 127]
+benchmarks:
+- arc_challenge
+- gsm8k
+- mmlu_subset
+models:
+- qwen2.5-7b-instruct
+- qwen2.5-3b-instruct
+- qwen2.5-14b-instruct
+M_full: 500
+K_full: 256
+K_ref: 256
+oracle_fraction: 0.5
+N_values:
+- 3
+- 7
+- 15
+- 31
+- 63
+- 127
 temperature: 0.7
-top_p:       0.95
-max_tokens:  512
+top_p: 0.95
+max_tokens: 512
 delta_global: 0.05
 prompt_variations_per_cell: 16
-seed_base: 0xCAFE
+seed_base: 51966

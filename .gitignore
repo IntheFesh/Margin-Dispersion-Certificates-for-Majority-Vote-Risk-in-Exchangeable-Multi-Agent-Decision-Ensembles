@@ -12,3 +12,15 @@ outputs/figures/*.pdf
 # HF datasets / model caches
 .cache/
 hf_cache/
+
+# Generated outputs (reproducible, never commit)
+outputs/
+panel_a.pid
+panel_a_full.log
+panel_a*.tar.gz
+
+# Editor / IDE artifacts
+*.bak
+.ipynb_checkpoints/
+__pycache__/
+*.pyc

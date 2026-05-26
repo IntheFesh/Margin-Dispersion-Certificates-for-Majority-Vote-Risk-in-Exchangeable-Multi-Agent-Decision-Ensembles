@@ -35,12 +35,12 @@ from src.utils.provenance import capture, copy_config
 # explicitly; a3..a7 are dispatched generically by their public callable.
 _ANALYSIS_MODULES: tuple[tuple[str, str], ...] = (
     ("a1_mc_bootstrap", "analysis_1_bootstrap"),
-    ("a2_nonvacuity", "analysis_2_nonvacuity"),
-    ("a3_refusal_taxonomy", "analysis_3_refusal_taxonomy"),
-    ("a4_bidirectional", "analysis_4_bidirectional"),
-    ("a5_budget_curves", "analysis_5_budget_curves"),
-    ("a6_sharpness", "analysis_6_sharpness"),
-    ("a7_conservativeness", "analysis_7_conservativeness"),
+    ("a2_nonvacuity", "nonvacuity_rates"),
+    ("a3_operating_regime", "operating_regime"),
+    ("a4_baseline_envelope", "baseline_envelope"),
+    ("a5_budget_curves", "budget_curves"),
+    ("a6_refusal_modes", "refusal_decomposition"),
+    ("a7_conservativeness", "conservativeness_decomposition"),
 )
 
 
@@ -150,7 +150,7 @@ def main() -> None:
     a1 = _resolve("a1_mc_bootstrap", "analysis_1_bootstrap")
     a1_rows: list[dict] = []
     for cell in summary["cells"]:
-        cell_dir = panel_a_dir / f"{cell['protocol']}_{cell['benchmark']}"
+        cell_dir = Path(cell.get('cell_dir', panel_a_dir / f"{cell['protocol']}_{cell['benchmark']}"))
         est = _success_matrix(cell_dir / "estimation.jsonl")
         orc = _success_matrix(cell_dir / "oracle.jsonl")
         for N in N_values:
@@ -184,18 +184,45 @@ def main() -> None:
     # --- Analyses 3-7: dispatched generically over the cells table. ----------
     # Each is invoked with the per-cell certificate DataFrame; whatever frame it
     # returns is written verbatim. Signature coupling is intentionally avoided.
+    import json as _json
     for module_suffix, preferred in _ANALYSIS_MODULES[2:]:
         fn = _resolve(module_suffix, preferred)
         result = fn(cells_df)
-        if not isinstance(result, pd.DataFrame):
-            raise TypeError(
-                f"analysis {module_suffix} must return a DataFrame, got {type(result)!r}"
-            )
         idx = module_suffix.split("_", 1)[0].lstrip("a")
-        out_path = output_dir / f"analysis_{idx}_{module_suffix.split('_', 1)[1]}.csv"
-        result.to_csv(out_path, index=False)
-        written.append(str(out_path))
-        logger.event("analysis.done", analysis=module_suffix, csv=str(out_path), n_rows=int(len(result)))
+        tail = module_suffix.split("_", 1)[1]
+        if isinstance(result, pd.DataFrame):
+            out_path = output_dir / f"analysis_{idx}_{tail}.csv"
+            result.to_csv(out_path, index=False)
+            written.append(str(out_path))
+            logger.event("analysis.done", analysis=module_suffix, csv=str(out_path), n_rows=int(len(result)))
+        elif isinstance(result, dict):
+            # Special handling for analyses returning a dict (e.g. a3 operating_regime).
+            # Write each DataFrame sub-component as CSV; collect scalars/dicts into a sidecar JSON.
+            sidecar = {}
+            for key, val in result.items():
+                if isinstance(val, pd.DataFrame):
+                    sub_path = output_dir / f"analysis_{idx}_{tail}_{key}.csv"
+                    val.to_csv(sub_path, index=False)
+                    written.append(str(sub_path))
+                else:
+                    sidecar[key] = val
+            json_path = output_dir / f"analysis_{idx}_{tail}.json"
+            with json_path.open("w") as fh:
+                _json.dump(sidecar, fh, indent=2, default=str)
+            written.append(str(json_path))
+            # Also write a primary CSV (the largest DataFrame component) at the canonical path
+            # so downstream scripts (e.g. 06_render_figures) can find analysis_3_<tail>.csv.
+            df_components = [(k, v) for k, v in result.items() if isinstance(v, pd.DataFrame)]
+            if df_components:
+                primary_key, primary_df = max(df_components, key=lambda kv: len(kv[1]))
+                primary_path = output_dir / f"analysis_{idx}_{tail}.csv"
+                primary_df.to_csv(primary_path, index=False)
+                written.append(str(primary_path))
+            logger.event("analysis.done", analysis=module_suffix, json=str(json_path), n_components=len(result))
+        else:
+            raise TypeError(
+                f"analysis {module_suffix} must return a DataFrame or dict, got {type(result)!r}"
+            )
 
     logger.event("analyses.complete", n_csv=len(written), output_dir=str(output_dir))
     print(f"Analyses 1-7 complete; wrote {len(written)} CSVs to {output_dir}:")

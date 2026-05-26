@@ -104,6 +104,8 @@ class VLLMClient:
 
         client = self._get_client()
         try:
+            seed = seed % (2**63)  # vLLM requires seed <= int64 max
+            seed = seed % (2**63)  # vLLM requires seed <= int64 max
             response = client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
